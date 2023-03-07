@@ -3,24 +3,24 @@
 ## Setup
 - First install HULC as below.
 
-- Also install my forked calvin repo: https://github.com/RobertMcCarthy97/calvin/tree/rob-custom
+- Then install my forked `calvin` repo: https://github.com/RobertMcCarthy97/calvin/tree/rob-custom
+    - Just update the hulc_venv (don't create a new conda env)
 
-- In both repos, switch to branch 'llm_planner'.
+- In both repos, switch to branch `llm_planner`.
 
-- Download the 'debug' dataset (see instructions below)
+- Download the `debug` dataset (see instructions below)
 
-- Download the pretrained HULC model 'D' (see instructions below)
+- Download the pretrained HULC model `D` (see instructions below)
 
 
 ## Run
-From this dir (cd $HULC_ROOT), run:
+From this dir (`cd $HULC_ROOT`), run:
 ```
 python hulc/evaluation/hulc_evaluate_policy_llm.py --dataset_path $HULC_ROOT/dataset/calvin_debug_dataset --train_folder $HULC_ROOT/checkpoints/HULC_D_D --checkpoint $HULC_ROOT/checkpoints/HULC_D_D/saved_models/HULC_D_D.ckpt --debug
-
 ```
 
 ## About
-In the hulc repo see `hulc/evaluation/hulc_evaluate_policy_llm.py`. This runs the CALVINRobotManager from the calvin repo (`calvin/calvin_models/calvin_agent/evaluation/calvin_robot_manager.py`).
+In the `hulc` repo see `hulc/evaluation/hulc_evaluate_policy_llm.py`. This runs the `CALVINRobotManager` from the `calvin` repo (`calvin/calvin_models/calvin_agent/evaluation/calvin_robot_manager.py`).
 
 
 # HULC
