@@ -11,6 +11,8 @@ from calvin_agent.evaluation.utils import get_default_model_and_env
 from calvin_agent.utils.utils import get_all_checkpoints, get_checkpoints_for_epochs, get_last_checkpoint
 from pytorch_lightning import seed_everything
 
+from calvin_agent.evaluation.calvin_robot_manager import CALVINRobotManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +81,17 @@ def main():
             env=env,
             device_id=args.device,
         )
-        evaluate_policy(model, env, epoch, eval_log_dir=args.eval_log_dir, debug=args.debug, create_plan_tsne=True)
+        # evaluate_policy(model, env, epoch, eval_log_dir=args.eval_log_dir, debug=args.debug, create_plan_tsne=True)
+        
+        robo_manager = CALVINRobotManager(model, env, eval_log_dir=args.eval_log_dir, visualize=args.debug)
+        env_str, task_str, actions_str = robo_manager.reset_env()
+        print(f"\n{env_str}\n")
+        print(f"\n{task_str}\n")
+        print(f"\n{actions_str}\n")
+        llm_chosen_actions = ['open_drawer', 'lift_blue_block_table', 'place_in_drawer', 'close_drawer']
+        for action in llm_chosen_actions:
+            success = robo_manager.rollout(action)
+            print(f"{action} succesful? {success}")
 
 
 if __name__ == "__main__":

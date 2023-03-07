@@ -13,6 +13,9 @@ from pytorch_lightning import seed_everything
 
 import numpy as np
 import torch
+from torch.utils.data import Subset
+from torch.utils.data import DataLoader
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,20 +34,85 @@ def get_lang_idxs(dataset):
     for i in range(np.array(dataset.lang_lookup).max()):
         lang_i = np.where(np.equal(dataset.lang_lookup, i))[0][0]
         unique_lang_idxs += [lang_i]
-    unique_lang_idxs = np.array(unique_lang_idxs)
     return unique_lang_idxs
 
-def get_batch_defined_idxs(dataset, idxs):
-    assert len(idxs.shape) == 1
-    batch_list = []
-    for i in idxs:
-        batch_list += [dataset[int(i)]]
-    
-    return batch_list
+def get_specific_batch(dataset, indices):
+    idxs_new = [int(i) for i in indices]
+    my_subset = Subset(dataset, idxs_new)
+    # import pdb; pdb.set_trace()
+    loader = DataLoader(my_subset, batch_size=len(idxs_new), shuffle=False) 
+    batch = next(iter(loader))
+    return batch
 
-def embed_batch_list(batch_list):
-    for sample in batch_list:
+def visualize_batch(dataset, batch):
+    import matplotlib.pyplot as plt
+    import cv2
+    def play_sequence(seq, text):
+        n_frames = seq.shape[0]
+        plt.figure()
+        for i in range(n_frames):
+            frame = seq[i]
+            frame = 255 * (frame + 1) / 2
+            frame = np.moveaxis(frame, 0, -1)
+            frame = cv2.resize(frame, (500, 500))
+            frame = frame[:, :, ::-1]
+            cv2.imshow(text, frame)
+            cv2.waitKey(1)
+            # plt.imshow(frame)
+            # import pdb; pdb.set_trace()
+            input()
+        cv2.destroyAllWindows()
+    
+    size = batch['robot_obs'].shape[0]
+    assert size == 7
+    for i in range(size):
+        text = dataset.lang_ann_str[i]
+        rgb_static_sequence = batch['rgb_obs']['rgb_static'][i]
+        print(f"ANNOTATION: \n{text}\n")
+        input("[ENTER] to play sequence")
+        play_sequence(rgb_static_sequence.numpy(force=True), text)
         
+    
+
+def embed_batch_list(model, batch):
+    def convert_dict_to_cuda(torch_dict):
+        cuda_dict = {}
+        for key, value in torch_dict.items():
+            if isinstance(value, dict):
+                cuda_dict[key] = convert_dict_to_cuda(value)
+            else:
+                cuda_dict[key] = value.cuda()
+        return cuda_dict
+    
+    batch = convert_dict_to_cuda(batch)
+    
+    # perceptual emb
+    perceptual_emb = model.perceptual_encoder(
+        batch["rgb_obs"], batch["depth_obs"], batch["robot_obs"]
+    )
+    # visual features
+    pr_state, seq_vis_feat = model.plan_recognition(perceptual_emb)
+    # lang features
+    encoded_lang = model.language_goal(batch["lang"])
+    import pdb; pdb.set_trace()
+    
+    # image, lang features
+    image_features, lang_features = model.proj_vis_lang(seq_vis_feat, encoded_lang)
+    
+    #### CLIP loss
+    image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+    text_features = lang_features / lang_features.norm(dim=-1, keepdim=True)
+    # cosine similarity as logits
+    logit_scale = model.logit_scale.exp()
+    logits_per_image = logit_scale * image_features @ text_features.t()
+    logits_per_text = logits_per_image.t()
+    # # symmetric loss function
+    # labels = torch.arange(logits_per_image.shape[0], device=text_features.device)
+    # loss_i = cross_entropy(logits_per_image, labels)
+    # loss_t = cross_entropy(logits_per_text, labels)
+    # loss = (loss_i + loss_t) / 2
+    
+    import pdb; pdb.set_trace()
         
     
 
@@ -107,10 +175,12 @@ def main():
             env=env,
             device_id=args.device,
         )
+        # import pdb; pdb.set_trace()
         batch_idxs = get_lang_idxs(data_module.val_datasets['lang'])
-        get_batch_defined_idxs(data_module.val_datasets['lang'], batch_idxs)
-        import pdb; pdb.set_trace()
-        evaluate_policy(model, env, epoch, eval_log_dir=args.eval_log_dir, debug=args.debug, create_plan_tsne=True)
+        batch = get_specific_batch(data_module.val_datasets['lang'], batch_idxs)
+        # visualize_batch(data_module.val_datasets['lang'], batch)
+        embed_batch_list(model, batch)
+        # evaluate_policy(model, env, epoch, eval_log_dir=args.eval_log_dir, debug=args.debug, create_plan_tsne=True)
         
         
 if __name__ == "__main__":
