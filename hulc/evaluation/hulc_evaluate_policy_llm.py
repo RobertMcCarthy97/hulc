@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 # This is for using the locally installed repo clone when using slurm
-from calvin_agent.evaluation.evaluate_policy_llm import evaluate_policy
+# from calvin_agent.evaluation.evaluate_policy_llm import evaluate_policy
 
 sys.path.insert(0, Path(__file__).absolute().parents[2].as_posix())
 from calvin_agent.evaluation.utils import get_default_model_and_env

@@ -1,3 +1,28 @@
+# CALVIN + LLM planner
+
+## Setup
+- First install HULC as below.
+
+- Also install my forked calvin repo: https://github.com/RobertMcCarthy97/calvin/tree/rob-custom
+
+- In both repos, switch to branch 'llm_planner'.
+
+- Download the 'debug' dataset (see instructions below)
+
+- Download the pretrained HULC model 'D' (see instructions below)
+
+
+## Run
+From this dir (cd $HULC_ROOT), run:
+```
+python hulc/evaluation/hulc_evaluate_policy_llm.py --dataset_path $HULC_ROOT/dataset/calvin_debug_dataset --train_folder $HULC_ROOT/checkpoints/HULC_D_D --checkpoint $HULC_ROOT/checkpoints/HULC_D_D/saved_models/HULC_D_D.ckpt --debug
+
+```
+
+## About
+In the hulc repo see `hulc/evaluation/hulc_evaluate_policy_llm.py`. This runs the CALVINRobotManager from the calvin repo (`calvin/calvin_models/calvin_agent/evaluation/calvin_robot_manager.py`).
+
+
 # HULC
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/mees/hulc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mees/hulc/context:python)
