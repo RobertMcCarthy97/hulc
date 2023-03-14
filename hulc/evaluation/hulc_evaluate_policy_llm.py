@@ -21,6 +21,14 @@ def get_epoch(checkpoint):
         return "0"
     checkpoint.stem.split("=")[1]
 
+def get_cohere_api_key(file_path):
+    if file_path is not None:
+        # Read the API key from a text file
+        with open(file_path, "r") as f:
+            api_key = f.read().strip()
+    else:
+        api_key = None
+    return api_key
 
 def main():
     seed_everything(0, workers=True)  # type:ignore
@@ -54,6 +62,11 @@ def main():
     parser.add_argument("--eval_log_dir", default=None, type=str, help="Where to log the evaluation results.")
 
     parser.add_argument("--device", default=0, type=int, help="CUDA device")
+    
+    parser.add_argument("--planner", default='ground-truth', type=str, help="One of [truth, user, cohere, openai].")
+
+    parser.add_argument("--cohere-path", default=None, type=str, help="Path of Cohere API key.")
+
     args = parser.parse_args()
 
     assert "train_folder" in args
@@ -81,15 +94,19 @@ def main():
             env=env,
             device_id=args.device,
         )
+        cohere_api_key = get_cohere_api_key(args.cohere_path)
         # evaluate_policy(model, env, epoch, eval_log_dir=args.eval_log_dir, debug=args.debug, create_plan_tsne=True)
         
-        robo_manager = CALVINRobotManager(model, env, eval_log_dir=args.eval_log_dir, visualize=args.debug)
+        robo_manager = CALVINRobotManager(model, env, eval_log_dir=args.eval_log_dir, visualize=args.debug, cohere_api_key=cohere_api_key)
         env_str, task_str, actions_str = robo_manager.reset_env()
-        print(f"\n{env_str}\n")
-        print(f"\n{task_str}\n")
-        print(f"\n{actions_str}\n")
-        llm_chosen_actions = ['open_drawer', 'lift_blue_block_table', 'place_in_drawer', 'close_drawer']
-        for action in llm_chosen_actions:
+        
+        chosen_actions = robo_manager.select_subtask_sequence(env_str, task_str, actions_str, args.planner)
+        
+        print("\nThe following plan was chosen:")
+        print(chosen_actions)
+        input("\nPress [Enter] to continue...")
+        
+        for action in chosen_actions:
             success = robo_manager.rollout(action)
             print(f"{action} succesful? {success}")
 
