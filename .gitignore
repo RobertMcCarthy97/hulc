@@ -141,3 +141,4 @@ dataset/task*
 
 sb3_logs/*
 wandb/*
+saved_models/*

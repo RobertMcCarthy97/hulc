@@ -24,7 +24,6 @@ class VideoRecorderCallback(BaseCallback):
         self._eval_env = eval_env
         self._render_freq = render_freq
         self._n_eval_episodes = n_eval_episodes
-        self._deterministic = deterministic
 
     def _on_step(self) -> bool:
         if self.n_calls % self._render_freq == 0:
@@ -52,7 +51,7 @@ class VideoRecorderCallback(BaseCallback):
             self._eval_env,
             callback=grab_screens,
             n_eval_episodes=self._n_eval_episodes,
-            deterministic=self._deterministic,
+            deterministic=deterministic,
         )
         self.logger.record(
             f"trajectory/video_{behaviour_str}",

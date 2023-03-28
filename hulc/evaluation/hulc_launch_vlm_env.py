@@ -145,12 +145,13 @@ def create_logger(args, env):
     callback_list = []
     callback_list += [EvalCallback(env, eval_freq=1000, best_model_save_path=exp_path)]
     callback_list += [SuccessRateCallback(vlm_rewards=args.vlm_rewards, log_freq=1000)]
-    callback_list += [VideoRecorderCallback(env, render_freq=5000, n_eval_episodes=1, deterministic=True)]
+    callback_list += [VideoRecorderCallback(env, render_freq=10000, n_eval_episodes=1, deterministic=True)]
     if args.track:
         callback_list += [
             WandbCallback(
                 gradient_save_freq=10,
-                model_save_path=None,
+                model_save_path="saved_models/",
+                model_save_freq=1000,
                 verbose=1,
             ),]
     callback = CallbackList(callback_list)
@@ -187,6 +188,7 @@ def main():
         env = DummyVecEnv([lambda: env])
         env = VecMonitor(env, info_keywords=("success", "is_success",))
         env = VecNormalize(env, norm_obs=True, norm_reward=False)
+        
         # logging
         logger, callback, exp_path = create_logger(args, env)
         
@@ -194,7 +196,6 @@ def main():
         model = PPO("MultiInputPolicy", env, verbose=1)
         model.set_logger(logger)
         model.learn(total_timesteps=int(1e6), callback=callback)
-        model.save(exp_path + "/trained_model") # TODO
 
 
 if __name__ == "__main__":
