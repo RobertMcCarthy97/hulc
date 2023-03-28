@@ -159,7 +159,7 @@ def create_logger(args, env):
     return new_logger, callback, exp_path
 
 def main():
-    seed_everything(0, workers=True)  # type:ignore
+    seed_everything(1, workers=True)  # type:ignore
     
     args = get_args()
     model, env, _ = load_calvin_items(args)
@@ -195,7 +195,7 @@ def main():
         # Define and train the PPO agent
         model = PPO("MultiInputPolicy", env, verbose=1)
         model.set_logger(logger)
-        model.learn(total_timesteps=int(1e6), callback=callback)
+        model.learn(total_timesteps=int(5e5), callback=callback)
 
 
 if __name__ == "__main__":

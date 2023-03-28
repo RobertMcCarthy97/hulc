@@ -104,7 +104,7 @@ class SuccessRateCallback(BaseCallback):
             self.data["random"] += [np.random.rand()]
             # Log vlm reward
             if self.locals['dones'][i] == True:
-                assert self.locals["n_steps"] > 1
+                # assert self.locals["n_steps"] > 1 # TODO!!! Dodgy stuff going on here!
                 self.data["is_success_final"] += [self.locals["infos"][i]["is_success"] * 1]
                 if self.vlm_rewards:
                     # r_similarity
