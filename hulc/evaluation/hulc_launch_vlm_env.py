@@ -159,7 +159,7 @@ def create_logger(args, env):
     return new_logger, callback, exp_path
 
 def main():
-    seed_everything(1, workers=True)  # type:ignore
+    seed_everything(10, workers=True)  # type:ignore
     
     args = get_args()
     model, env, _ = load_calvin_items(args)
